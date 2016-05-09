@@ -1,0 +1,6 @@
+---
+- hosts: all
+- include: webserver.yml
+# - include: registration.yml
+# - include: xmpp.yml
+# - include: irc.yml

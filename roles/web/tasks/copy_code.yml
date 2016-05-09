@@ -1,0 +1,6 @@
+---
+- name: Copy the code from repository
+  git: repo={{ repository }} dest=/root/matrix-site/
+
+- name: Build site
+  shell: /usr/bin/jekyll /root/matrix-site/ -> /root/public_html
