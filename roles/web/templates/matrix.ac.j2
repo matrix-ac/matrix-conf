@@ -1,0 +1,37 @@
+## <unknown> 		 - Intial Config	- Osaka
+## 05 November 	2015 - Added SSL 		- Osaka
+## 10 May 		2016 - Moved to ansible - Osaka
+
+limit_req_zone $binary_remote_addr zone=one:10m rate=1r/s;
+
+#server {
+#        listen      80 default;
+#        server_name matrix.ac www.matrix.ac;
+#        
+#        rewrite        ^ https://matrix.ac$request_uri? permanent;
+#}
+
+server {
+        listen 80;
+        server_name localhost matrix.ac www.matrix.ac;
+
+        #ssl_certificate     /etc/letsencrypt/live/matrix.ac/fullchain.pem;
+        #ssl_certificate_key /etc/letsencrypt/live/matrix.ac/privkey.pem;
+
+        limit_req      zone=one burst=10 nodelay;
+
+        location ~ ^/~(.+?)(/.*)?$ {
+                alias /home/$1/public_html$2;
+        }
+
+        location / {
+                root /var/www/html/;
+                autoindex on;
+        }
+        
+        location /registration/ {
+                proxy_pass	http://localhost:8080/;
+                access_log	/var/log/nginx/gsh.access.log;
+                error_log	/var/log/nginx/gsh.error.log;
+        }
+}

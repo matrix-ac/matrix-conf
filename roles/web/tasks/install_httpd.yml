@@ -1,11 +1,15 @@
 ---
+# file: roles/web/tasks
+- name: Install nginx
+  apt: name={{ item }} state=present
+  with_items:
+   - nginx
+   - git
+   - jekyll
 
- - name: Install nginx
-   apt: name={{ item }} state=present
-   with_items:
-    - nginx
-    - git
-    - jekyll
+- name: Configure nginx
+  template: src=matrix.ac.j2 dest=/etc/nginx/sites-enabled/matrix.ac
+  notify: restart nginx
 
-# - name: http service state
-#   service: name=nginx state=started enabled=yes
+- name: http service state
+  service: name=nginx state=started enabled=yes

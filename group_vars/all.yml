@@ -1,3 +1,4 @@
 ---
-
-repository: https://github.com/matrix-ac/matrix-site.git
+# file: group_vars 
+repo_matrix_ac: https://github.com/matrix-ac/matrix-site.git
+repo_registration: https://github.com/matrix-ac/GreatScottHosting.git

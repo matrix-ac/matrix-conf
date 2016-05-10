@@ -1,0 +1,17 @@
+---
+# file: roles/common/tasks
+- name: Install Basic things
+  apt: name={{ item }} state=present
+  with_items:
+   - vim
+   - htop
+   - fail2ban 
+   - ufw 
+   - logwatch
+   - apticron 
+   - ntp 
+   - screen 
+   - weechat 
+   - vnstat 
+   - vnstati
+   - sudo

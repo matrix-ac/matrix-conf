@@ -1,0 +1,6 @@
+---
+- name: Install the basic common applications
+  hosts: all
+
+  roles:
+    - common

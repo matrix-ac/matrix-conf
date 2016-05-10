@@ -1,0 +1,6 @@
+---
+- name: configure and deploy the user registration service
+  hosts: all
+
+  roles:
+    - registration

@@ -1,6 +1,8 @@
 ---
+# file: roles/web/tasks
 - name: Copy the code from repository
-  git: repo={{ repository }} dest=/root/matrix-site/
+  git: repo={{ repo_matrix_ac }} dest=/root/matrix-site/
 
 - name: Build site
-  shell: /usr/bin/jekyll /root/matrix-site/ -> /root/public_html
+  shell: /usr/bin/jekyll build -s /root/matrix-site/ -d /var/www/html/
+

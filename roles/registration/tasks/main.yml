@@ -1,0 +1,13 @@
+---
+# file: roles/registration
+- name: Install nodejs
+  apt: name={{ item }} state=present
+  with_items:
+   - nodejs
+   - npm
+
+- name: Clone repository
+  git: repo={{ repo_registration }} dest=/root/matrix-registration
+
+- name: Install dependeces 
+  npm: path=/root/matrix-registration
