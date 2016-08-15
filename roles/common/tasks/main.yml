@@ -3,15 +3,35 @@
 - name: Install Basic things
   apt: name={{ item }} state=present
   with_items:
-   - vim
-   - htop
+   # Admin
+   - sudo
+   - vnstat 
+   - vnstati
    - fail2ban 
-   - ufw 
    - logwatch
    - apticron 
    - ntp 
+   - ufw 
+   - htop
+   # Editors
+   - vim
+   - emacs
+   # Terminal Multiplexers
    - screen 
+   - tmux 
+   # Chat
    - weechat 
-   - vnstat 
-   - vnstati
-   - sudo
+   - irssi
+   - mcabber
+   - profanity
+   # Email 
+   - mutt
+   - alpine
+   # WWW
+   - links2
+   - weboob
+   # Games
+   - nethack-console
+   # Terminals 
+   - fish
+   - zsh

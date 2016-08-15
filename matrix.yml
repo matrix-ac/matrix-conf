@@ -1,6 +1,8 @@
 ---
 - hosts: all
+  become_method: sudo 
+- include: common.yml
 - include: webserver.yml
-- include: registration.yml
+# - include: registration.yml
 # - include: xmpp.yml
 # - include: irc.yml

@@ -1,6 +1,6 @@
 ---
 # file: roles/web/tasks
-- name: Install nginx
+- name: Install webserver and requirements.
   apt: name={{ item }} state=present
   with_items:
    - nginx
