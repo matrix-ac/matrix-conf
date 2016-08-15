@@ -35,3 +35,5 @@
    # Terminals 
    - fish
    - zsh
+   # Misc
+   - pandoc
