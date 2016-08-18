@@ -1,0 +1,9 @@
+---
+# file: roles/users/tasks
+
+- file: path=/etc/skel/public_html owner=root group=root state=directory mode=0755
+- file: path=/etc/skel/public_repos owner=root group=root state=directory mode=0755
+- file: path=/etc/skel/.ssh owner=root group=root state=directory mode=0744
+
+- name: Copy over profile.d/symlinks
+  template: src=adm-adduser.j2 dest=/usr/bin/adm-adduser owner=root group=sudo mode="u=rx,g=rx,o="

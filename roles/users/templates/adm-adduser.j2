@@ -1,0 +1,18 @@
+#!/bin/bash 
+
+# Admin script for adding new users
+
+USERNAME=$1
+SSH_PUB=$2
+
+if [ ! -L /home/$USERNAME ]; then
+	adduser --disabled-login --disabled-password --gecos "" $USERNAME
+	cp $SSH_PUB /home/$USERNAME/.ssh/authorized_keys
+	chown $USERNAME /home/$USERNAME/.ssh/authorized_keys
+fi
+
+if [ ! -L {{ cgit_repo_locations }}/$USERNAME ]; then
+   ln -fs /home/$USERNAME/public_repos {{ cgit_repo_locations }}/$USERNAME
+   echo "Created - /home/$USERNAME/public_repos {{ cgit_repo_locations }}/$USERNAME"
+fi
+
