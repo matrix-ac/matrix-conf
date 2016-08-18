@@ -1,0 +1,30 @@
+
+css=/cgit.css
+logo=/cgit.png
+favicon=/favicon.ico
+virtual-root=/
+
+robots=noindex, nofollow 
+
+snapshots=tar.gz
+
+readme=:README
+readme=:readme
+readme=:readme.txt
+readme=:README.txt
+readme=:readme.md
+readme=:README.md
+
+enable-commit-graph=1
+enable-log-filecount=1
+enable-log-linecount=1
+section-from-path=1
+side-by-side-diffs=1
+remove-suffix=1
+
+about-filter=/usr/lib/cgit/filters/about-formatting.sh
+source-filter=/usr/lib/cgit/filters/syntax-highlighting.py
+
+root-title=Matrix 
+root-desc=Source code repository.
+scan-path={{ cgit_repo_locations }}

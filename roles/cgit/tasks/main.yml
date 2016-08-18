@@ -1,0 +1,20 @@
+---
+# file: roles/cgit/tasks
+- name: Install and setup cgit.
+  apt: name={{ item }} state=present
+  with_items:
+   - cgit
+   - fcgiwrap
+   - python-pygments
+
+- file: path={{ cgit_repo_locations }} owner=root group=www-data state=directory mode=0755
+
+- name: Configure cgit
+  template: src=cgitrc.j2 dest=/etc/cgitrc
+
+- name: Add nginx config
+  template: src=cgit.conf.j2 dest=/etc/nginx/sites-enabled/cgit.conf
+  notify: restart nginx
+
+- name: http service state
+  service: name=nginx state=started enabled=yes
