@@ -1,7 +1,8 @@
 ---
-- name: Install the basic common applications
+- name: Install some common stuff and sane configs
   hosts: all
   become: yes
 
   roles:
     - common
+    - users
