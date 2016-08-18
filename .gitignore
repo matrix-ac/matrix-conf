@@ -1,1 +1,3 @@
 *.retry
+*.sublime-workspace
+*.vagrant
