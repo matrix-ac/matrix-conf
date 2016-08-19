@@ -1,0 +1,18 @@
+---
+# file: roles/ircd/tasks
+- name: Install webserver and requirements.
+  apt: name=charybdis state=present
+
+- name: Place the configuration files
+  template: src=ircd.conf.j2 dest=/etc/charybdis owner=root group=charybdis
+  template: src=ircd.motd.j2 dest=/etc/charybdis owner=root group=charybdis
+  template: src=linked_servers.conf.j2 dest=/etc/charybdis owner=root group=charybdis
+  template: src=listen_host.conf.j2 dest=/etc/charybdis owner=root group=charybdis
+  template: src=operators.conf.j2 dest=/etc/charybdis owner=root group=charybdis
+  template: src=server_info.conf.j2 dest=/etc/charybdis owner=root group=charybdis
+
+# - name: Sort out the TLS
+
+
+- name: IRCd restart
+  service: name=charybdis state=restarted enabled=yes

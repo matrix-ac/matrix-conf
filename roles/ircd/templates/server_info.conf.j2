@@ -1,0 +1,26 @@
+/* serverinfo {}:  Contains information about the server. (OLD M:) */
+serverinfo {
+	name = "macak.matrix";
+	sid = "42M";
+	network_name = "Macak";
+	network_desc = "The Macak IRC Net";
+	hub = no;
+	
+	/* ssl_private_key = "tls/privkey.pem"; 
+	ssl_cert = "tls/fullchain.pem"; */
+
+	/* openssl dhparam -out dh.pem 2048 */
+	/* ssl_dh_params = "tls/dh.pem"; */
+
+	ssld_count = 1;
+
+	default_max_clients = 1024;
+	nicklen = 30;
+};
+
+/* admin {}: contains admin information about the server. (OLD A:) */
+admin {
+	name = "Osaka";
+	description = "Main Server Administrator";
+	email = "osaka@matrix.ac";
+};

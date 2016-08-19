@@ -1,0 +1,12 @@
+/* operator {}: defines ircd operators. (OLD O:) */
+operator "osaka" {
+	user = "*@127.0.0.1";
+
+	password = "yolo";
+
+	umodes = locops, servnotice, operwall, wallop;
+
+	snomask = "+Zbfkrsuy";
+	flags = need_ssl, encrypted;
+	privset = "admin";
+};

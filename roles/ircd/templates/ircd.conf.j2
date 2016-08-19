@@ -1,0 +1,815 @@
+/*
+ * 30th March 2016 - 2 years after the first UnrealIRCd linking on the 1st April 2014.
+ */
+
+/* IMPORTANT NOTES:
+ *
+ * class {} blocks MUST be specified before anything that uses them.  That
+ * means they must be defined before auth {} and before connect {}.
+ *
+ * auth {} blocks MUST be specified in order of precedence.  The first one
+ * that matches a user will be used.  So place spoofs first, then specials,
+ * then general access, then restricted.
+ *
+ * privset {} blocks MUST be specified before anything that uses them.  That
+ * means they must be defined before operator {}.
+ *
+ * Both shell style (#) and C style comments are supported.
+ *
+ * Files may be included by either:
+ *        .include "filename"
+ *        .include <filename>
+ *
+ * Times/durations are written as:
+ *        12 hours 30 minutes 1 second
+ *        
+ * Valid units of time:
+ *        month, week, day, hour, minute, second
+ *
+ * Valid units of size:
+ *        megabyte/mbyte/mb, kilobyte/kbyte/kb, byte
+ *
+ * Sizes and times may be singular or plural.  
+ */ 
+
+/* Extensions:
+ *
+ * Charybdis contains several extensions that are not enabled by default.
+ * To use them, uncomment the lines below.
+ *
+ * Channel mode +-A (admin only)                     -- chm_adminonly.so
+ * Channel mode +-O (oper only)                      -- chm_operonly.so
+ * Channel mode +-S (ssl only)                       -- chm_sslonly.so
+ * Emulates channel mode +-O (oper only) (+-iI $o)   -- chm_operonly_compat.so
+ * Emulates channel mode +-R (quiet unreg) (+-q $~a) -- chm_quietunreg_compat.so
+ * Emulates channel mode +-S (ssl only) (+-b $~z)    -- chm_sslonly_compat.so
+ * Restrict channel creation to logged in users      -- createauthonly.so
+ * Account bans (+b $a[:mask])                       -- extb_account.so
+ * Banned from another channel (+b $j:mask)          -- extb_canjoin.so
+ * Other-channel bans (+b $c:mask)                   -- extb_channel.so
+ * Extended ban (+b $x:mask)                         -- extb_extgecos.so
+ * Oper bans (+b $o)                                 -- extb_oper.so
+ * Realname (gecos) bans (+b $r:mask)                -- extb_realname.so
+ * Server bans (+b $s:mask)                          -- extb_server.so
+ * SSL bans (+b $z)                                  -- extb_ssl.so
+ * HURT system                                       -- hurt.so
+ * New host mangling (umode +x)                      -- ip_cloaking_4.0.so
+ * Old host mangling (umode +h)                      -- ip_cloaking.so
+ * Find channel forwards                             -- m_findforwards.so
+ * /identify support                                 -- m_identify.so
+ * Opers cannot be invisible (umode +i)              -- no_oper_invis.so
+ * Far connection notices (snomask +F)               -- sno_farconnect.so
+ * Remote k/d/x line active notices                  -- sno_globalkline.so
+ * Remote oper up notices                            -- sno_globaloper.so
+ * /whois notifications (snomask +W)                 -- sno_whois.so
+ * Oper-override (modehacking only)                  -- override.so
+ */
+#loadmodule "extensions/chm_adminonly.so";
+loadmodule "extensions/chm_operonly.so";
+loadmodule "extensions/chm_sslonly.so";
+#loadmodule "extensions/chm_operonly_compat.so";
+#loadmodule "extensions/chm_quietunreg_compat.so";
+#loadmodule "extensions/chm_sslonly_compat.so";
+#loadmodule "extensions/createauthonly.so";
+#loadmodule "extensions/extb_account.so";
+#loadmodule "extensions/extb_canjoin.so";
+#loadmodule "extensions/extb_channel.so";
+#loadmodule "extensions/extb_extgecos.so";
+#loadmodule "extensions/extb_oper.so";
+#loadmodule "extensions/extb_realname.so";
+#loadmodule "extensions/extb_server.so";
+#loadmodule "extensions/extb_ssl.so";
+#loadmodule "extensions/hurt.so";
+loadmodule "extensions/ip_cloaking_4.0.so";
+#loadmodule "extensions/ip_cloaking.so";
+#loadmodule "extensions/m_findforwards.so";
+#loadmodule "extensions/m_identify.so";
+#loadmodule "extensions/no_oper_invis.so";
+#loadmodule "extensions/sno_farconnect.so";
+#loadmodule "extensions/sno_globalkline.so";
+#loadmodule "extensions/sno_globaloper.so";
+loadmodule "extensions/sno_whois.so";
+loadmodule "extensions/override.so";
+
+/* Admins can run the command /opme on an opless chan to become op */
+loadmodule "extensions/m_opme.so"; 
+
+/* serverinfo{}, admin{} */
+.include <server_info.conf>
+
+/* log {}: contains information about logfiles. */
+log {
+	/* logfiles: the logfiles to use for specific activity.  if these
+	 * paths are defined, then ircd will log to them, otherwise it wont.
+	 *
+	 * The confs are, in order:
+	 * - userlog:    user exits
+	 * - fuserlog:   failed user connections
+	 * - operlog:    /oper usage
+	 * - foperlog:   failed /oper usage
+	 * - serverlog:  server connects/disconnects
+	 * - klinelog:   klines, etc
+	 * - killlog:    kills
+	 * - operspylog: operspy usage
+	 * - ioerrorlog: IO errors
+	 */
+		fname_userlog = "/var/log/charybdis/userlog";
+		fname_fuserlog = "/var/log/charybdis/fuserlog";
+		fname_operlog = "/var/log/charybdis/operlog";
+		fname_foperlog = "/var/log/charybdis/foperlog";
+		fname_serverlog = "/var/log/charybdis/serverlog";
+		fname_klinelog = "/var/log/charybdis/klinelog";
+		fname_killlog = "/var/log/charybdis/killlog";
+		fname_operspylog = "/var/log/charybdis/operspylog";
+		fname_ioerrorlog = "/var/log/charybdis/ioerror";
+};
+
+/* class {}: contain information about classes for users (OLD Y:) */
+class "users" {
+	ping_time = 2 minutes;
+	number_per_ident = 2;
+	number_per_ip = 3;
+	number_per_ip_global = 5;
+	cidr_ipv4_bitlen = 24;
+	cidr_ipv6_bitlen = 64;
+	number_per_cidr = 4;
+	max_number = 100;
+	sendq = 100 kbytes;
+};
+
+class "usersShared" {
+        ping_time = 1 minutes;
+        number_per_ident = 50;
+        number_per_ip = 50;
+        number_per_ip_global = 5;
+        cidr_ipv4_bitlen = 24;
+        cidr_ipv6_bitlen = 64;
+        number_per_cidr = 4;
+        max_number = 100;
+        sendq = 100 kbytes;
+};
+
+class "restricted" {
+	ping_time = 1 minute 30 seconds;
+	number_per_ip = 1;
+	max_number = 100;
+	sendq = 60kb;
+};
+
+class "opers" {
+	ping_time = 5 minutes;
+	number_per_ip = 10;
+	max_number = 100;
+	sendq = 100kbytes;
+};
+
+class "server" {
+	ping_time = 5 minutes;
+	connectfreq = 5 minutes;
+	max_number = 1;
+	sendq=2 megabytes;
+};
+
+/* listen {}: contain information about the ports ircd listens on (OLD P:) */
+listen {
+	defer_accept = yes;
+	.include "listen_host.conf"
+};
+
+auth {
+       user = "*@matrix.ac";
+       #spoof = "matrix.";
+       class = "usersShared";
+};
+
+auth {
+        user = "*@127.0.0.1";
+        class = "users";
+};
+
+auth {
+	user = "*@*";
+	flags = need_ssl; 
+	class = "users";
+};
+
+
+/* privset{}: defines operator privilege sets. */
+privset "local_op" {
+	/* privs: controls the activities and commands an oper is
+	 * allowed to do on the server
+	 *
+	 * Available options:
+	 *
+	 * oper:local_kill:      allows local users to be /KILL'd
+	 * oper:global_kill:     allows local and remote users to be /KILL'd
+	 * oper:routing:         allows remote SQUIT and CONNECT
+	 * oper:kline:           allows KLINE and DLINE
+	 * oper:unkline:         allows UNKLINE and UNDLINE
+	 * snomask:nick_changes: allows oper to see nickchanges via snomask +n
+	 * oper:rehash:          allows oper to REHASH config
+	 * oper:die:             allows DIE and RESTART
+	 * oper:admin:           gives admin privileges.  admins
+	 *                       may (un)load modules and see various
+	 *                       additional information.
+	 * oper:hidden_admin:    gives admin privileges except
+	 *		         will not have the admin lines in
+	 *		         whois.
+	 * oper:xline:	         allows use of /quote xline/unxline
+	 * oper:resv:	         allows /quote resv/unresv and cmode +LP
+	 * oper:operwall:        allows the oper to send/receive operwalls
+	 * oper:spy:	         allows 'operspy' features to see through +s
+	 * 		         channels etc. see /quote help operspy
+	 * oper:hidden:          hides the oper from /stats p
+	 * oper:remoteban:       allows remote kline etc
+	 * oper:mass_notice:     allows sending wallops and mass notices
+	 */
+	privs = oper:local_kill, oper:operwall;
+};
+
+privset "global_op" {
+	extends = "local_op";
+	privs = oper:global_kill, oper:routing, oper:kline, oper:unkline, oper:xline,
+		oper:resv, oper:mass_notice, oper:remoteban, oper:override;
+};
+
+privset "admin" {
+	extends = "global_op";
+	privs = oper:admin, oper:die, oper:rehash, oper:spy;
+};
+
+/* operator {} */
+.include <operators.conf>
+
+/* connect{}, cluster {} */
+.include <linked_servers.conf>
+
+/* Removed - service{}: privileged servers (services). 
+ * Removed - shared {}: users that are allowed to place remote bans on our server.
+ */
+
+exempt {
+	ip = "127.0.0.1";
+};
+
+/* The channel block contains options pertaining to channels */
+channel {
+	/* invex: Enable/disable channel mode +I, a n!u@h list of masks
+	 * that can join a +i channel without an invite.
+	 */
+	use_invex = yes;
+
+	/* except: Enable/disable channel mode +e, a n!u@h list of masks
+	 * that can join a channel through a ban (+b).
+	 */
+	use_except = yes;
+
+	/* forward: Enable/disable channel mode +f, a channel to forward
+	 * users to if they can't join because of +i etc. Also enables ban
+	 * forwarding, <mask>$<channel>.
+	 */
+	use_forward = yes;
+
+	/* knock: Allows users to request an invite to a channel that
+	 * is locked somehow (+ikl).  If the channel is +p or you are banned
+	 * the knock will not be sent.
+	 */
+	use_knock = yes;
+
+	/* knock delay: The amount of time a user must wait between issuing
+	 * the knock command.
+	 */
+	knock_delay = 5 minutes;
+
+	/* knock channel delay: How often a knock to any specific channel
+	 * is permitted, regardless of the user sending the knock.
+	 */
+	knock_delay_channel = 1 minute;
+
+	/* max chans: The maximum number of channels a user can join/be on. */
+	max_chans_per_user = 15;
+
+	/* max bans: maximum number of +b/e/I/q modes in a channel */
+	max_bans = 100;
+
+	/* max bans: maximum number of +b/e/I/q modes in a +L channel */
+	max_bans_large = 500;
+
+	/* splitcode: split users, split servers and either no join on split
+	 * or no create on split must be enabled for split checking.
+	 * splitmode will be entered on either split users or split servers
+	 * dropping below the limit.
+	 *
+	 * you may force splitmode to be permanent by /quote set splitmode on
+	 */
+
+	/* split users: when the usercount is lower than this level, consider
+	 * ourselves split.  this must be set for automatic splitmode
+	 */
+	default_split_user_count = 0;
+
+	/* split servers: when the amount of servers that have acknowledged
+	 * theyve finished bursting is lower than this, consider ourselves 
+	 * split.  this must be set for automatic splitmode
+	 */
+	default_split_server_count = 0;
+
+	/* split: no create: disallow users creating channels on split */
+	no_create_on_split = no;
+
+	/* split: no join: disallow users joining channels at all on a split */
+	no_join_on_split = no;
+
+	/* burst topicwho: when bursting topics, also burst the topic setter */
+	burst_topicwho = yes;
+
+	/* kick on split riding: kick users riding splits to join +i or +k
+	 * channels. more precisely, if a bursting server sends an SJOIN
+	 * for a channel with a lower TS with either a +i mode or a +k
+	 * mode with a different key, kick all local users.
+	 *
+	 * note: this does not take +r, +b, +e and +I into account.
+	 */
+	kick_on_split_riding = no;
+
+	/* only ascii channels: disable local users joining channels
+	 * containing characters outside the range 33-126 (non-printable
+	 * or non-ASCII).
+	 */
+	only_ascii_channels = no;
+
+	/* resv_forcepart: force any local users to part a channel
+	 * when a RESV is issued.
+	 */
+	resv_forcepart = yes;
+
+	/* channel target change: restrict how many channels users can
+	 * message per unit of time. IRC operators, channel operators and
+	 * voiced users are exempt.
+	 */
+	channel_target_change = yes;
+
+	/* disable local channels: if yes, then local channels will not be
+	 * supported.
+	 */
+	disable_local_channels = no;
+};
+
+
+/* The serverhide block contains the options regarding serverhiding */
+serverhide {
+	flatten_links = no;
+	links_delay = 5 minutes;
+	hidden = no;
+	disable_hidden = no;
+};
+
+
+/* Removed - blacklist {} */
+
+/*
+ * Alias blocks allow you to define custom commands. (Old m_sshortcut.c)
+ * They send PRIVMSG to the given target. A real command takes
+ * precedence above an alias.
+ */
+alias "NickServ" {
+	/* the name must go above */
+
+	/* target: the target nick (must be a network service) or
+	 * user@server (cannot be this server, only opers can use
+	 * user starting with "opers" reliably, interpreted on the target
+	 * server only so you may need to use nick@server instead)
+	 */
+	target = "NickServ";
+};
+
+alias "ChanServ" {
+	target = "ChanServ";
+};
+
+alias "OperServ" {
+	target = "OperServ";
+};
+
+alias "MemoServ" {
+	target = "MemoServ";
+};
+
+alias "NS" {
+	target = "NickServ";
+};
+
+alias "CS" {
+	target = "ChanServ";
+};
+
+alias "OS" {
+	target = "OperServ";
+};
+
+alias "MS" {
+	target = "MemoServ";
+};
+
+/* The general block contains many of the options that were once compiled
+ * in options in config.h.  The general block is read at start time.
+ */
+general {
+	/* hide error messages: defines whether error messages from
+	 * servers that are not deemed fully safe are hidden or not.
+	 * These can sometimes contain IPs and can have an adverse
+	 * effect on server ip hiding.  Set to:
+	 *   yes:   hide from opers and admin
+	 *   opers: hide from opers only
+	 *   no:    do not hide error messages
+	 * Admins on other servers count as opers.
+	 */
+	hide_error_messages = opers;
+
+	/* hide spoof ips: hide the real ips of auth{} spoofed users
+	 * If disabled, local opers can see them.
+	 * Dynamic spoofs (e.g. set by services) are unaffected by this;
+	 * any oper (local and remote) can see the real ip.
+	 * Warning: for whowas, this is checked when the client exits,
+	 * not when the IP is shown.
+	 */
+	hide_spoof_ips = yes;
+
+	/* default umodes: umodes to set upon connection
+	 * If you have enabled the ip_cloaking extension, and you wish for
+	 * incoming clients to be set +h or +x upon connection, add +h or +x to the umode
+	 * string below.
+	 */
+	default_umodes = "+ix";
+
+	/* default operstring: defines the default oper response
+	 * in /whois queries, eg "is an IRC Operator".
+	 * After startup use /quote set operstring to change.
+	 */
+	default_operstring = "is an IRC Operator";
+
+	/* default adminstring: defines the default admin response
+	 * in /whois queries, eg "is a Server Administrator".
+	 * After startup use /quote set adminstring to change.
+	 */
+	default_adminstring = "is a Server Administrator";
+
+	/* servicestring: defines the response for opered services (+S)
+	 * in /whois queries, eg "is a Network Service".
+	 * This is updated on rehash.
+	 */
+	servicestring = "is a Network Service";
+
+	/* disable fake channels: disable local users joining fake versions
+	 * of channels, eg #foo^B^B.  Disables bold, mirc colour, reverse,
+	 * underline and hard space.  (ASCII 2, 3, 22, 31, 160 respectively).
+	 */
+	disable_fake_channels = no;
+
+	/* tkline_expire_notices: give a notice to opers when a tkline
+	 * expires
+	 */
+	tkline_expire_notices = no;
+
+	/* floodcount: the default value of floodcount that is configurable
+	 * via /quote set floodcount.  This is the amount of lines a user
+	 * may send to any other user/channel in one second.
+	 */
+	default_floodcount = 10;
+
+	/* failed oper notice: send a notice to all opers on the server when 
+	 * someone tries to OPER and uses the wrong password, host or ident.
+	 */
+	failed_oper_notice = yes;
+
+	/* dots in ident: the amount of '.' characters permitted in an ident
+	 * reply before the user is rejected.
+	 */
+	dots_in_ident=2;
+
+	/* min nonwildcard: the minimum non wildcard characters in k/d/g lines
+	 * placed via the server.  klines hand placed are exempt from limits.
+	 * wildcard chars: '.' '*' '?' '@'
+	 */
+	min_nonwildcard = 4;
+
+	/* min nonwildcard simple: the minimum non wildcard characters in
+	 * xlines/resvs placed via the server.
+	 * wildcard chars: '*' '?'
+	 */
+	min_nonwildcard_simple = 3;
+
+	/* max accept: maximum allowed /accept's for +g usermode */
+	max_accept = 20;
+
+	/* max monitor: the maximum amount of nicknames a client may have in
+	 * their monitor (server-side notify) list.
+	 */
+	max_monitor = 100;
+
+	/* nick flood: enable the nickflood control code */
+	anti_nick_flood = yes;
+
+	/* nick flood: the nick changes allowed in the specified period */
+	max_nick_time = 20 seconds;
+	max_nick_changes = 5;
+
+	/* anti spam time: the minimum time a user must be connected before
+	 * custom quit messages are allowed.
+	 */
+	anti_spam_exit_message_time = 5 minutes;
+
+	/* ts delta: the time delta allowed between server clocks before
+	 * a warning is given, or before the link is dropped.  all servers
+	 * should run ntpdate/rdate to keep clocks in sync
+	 */
+	ts_warn_delta = 30 seconds;
+	ts_max_delta = 5 minutes;
+
+	/* client exit: prepend a users quit message with "Client exit: " */
+	client_exit = yes;
+
+	/* collision fnc: change user's nick to their UID instead of
+	 * killing them, if possible. This setting only applies to nick
+	 * collisions detected on this server. Only enable this if
+	 * all servers on the network allow remote nicks to start with
+	 * a digit.
+	 */
+	collision_fnc = yes;
+
+	/* resv fnc: change a user's nick to a nick they have recently used
+	 * (or their UID, if no such nick can be found) when a resv matching
+	 * them is set by services. Only enable this if all servers on the
+	 * network allow remote nicks to start with a digit.
+	 */
+	resv_fnc = yes;
+
+	/* global snotices: send out certain snotices (most +b, +f, +y,
+	 * some +s) to other servers via ENCAP SNOTE. Received SNOTEs are
+	 * displayed unconditionally.
+	 */
+	global_snotices = yes;
+	
+	/* dline reason: show the user the dline reason when they connect 
+	 * and are dlined.
+	 */
+	dline_with_reason = yes;
+	
+	/* kline delay: delay the checking of klines until a specified time.
+	 * Useful if large kline lists are applied often to prevent the
+	 * server eating CPU.
+	 */
+	kline_delay = 0 seconds;
+
+	/* kline reason: show the user the reason why they are k/dlined 
+	 * on exit.  may give away who set k/dline when set via tcm.
+	 */
+	kline_with_reason = yes;
+
+	/* kline reason: make the users quit message on channels this
+	 * reason instead of the oper's reason.
+	 */
+	kline_reason = "Connection closed";
+
+	/* identify to services via server password
+	 * if auth{} block had no password but the user specified a
+	 * server password anyway, send a PRIVMSG to <identify_service>
+	 * with as text <identify_command> <password>.
+	 */
+	identify_service = "NickServ@services.int";
+	identify_command = "IDENTIFY";
+
+	/* non redundant klines: flag and ignore redundant klines */
+	non_redundant_klines = yes;
+
+	/* warn no nline: warn opers about servers that try to connect but
+	 * we dont have a connect {} block for.  Twits with misconfigured 
+	 * servers can get really annoying with this enabled.
+	 */
+	warn_no_nline = yes;
+
+	/* use propagated bans: KLINE, XLINE and RESV set fully propagated bans.
+	 * That means the bans are part of the netburst and restarted/split
+	 * servers will get them, but they will not apply to 3.2 and older
+	 * servers at all.
+	 */
+	use_propagated_bans = yes;
+
+	/* stats e disabled: disable stats e.  useful if server ips are
+	 * exempted and you dont want them listing on irc.
+	 */
+	stats_e_disabled = no;
+
+	/* stats c oper only: make stats c (connect {}) oper only */
+	stats_c_oper_only=no;
+
+	/* stats h oper only: make stats h (hub_mask/leaf_mask) oper only */
+	stats_h_oper_only=no;
+
+	/* stats y oper only: make stats y (class {}) oper only */
+	stats_y_oper_only=no;
+
+	/* stats o oper only: make stats o (opers) oper only */
+	stats_o_oper_only=yes;
+
+	/* stats P oper only: make stats P (ports) oper only
+	 * NOTE: users doing stats P will never be given the ips that the 
+	 * server listens on, simply the ports.
+	 */
+	stats_P_oper_only=no;
+
+	/* stats i oper only: make stats i (auth {}) oper only. set to:
+	 *     yes:    show users no auth blocks, made oper only.
+	 *     masked: show users first matching auth block
+	 *     no:     show users all auth blocks.
+	 */
+	stats_i_oper_only=masked;
+
+	/* stats k/K oper only: make stats k/K (klines) oper only.  set to:
+	 *     yes:    show users no auth blocks, made oper only
+	 *     masked: show users first matching auth block
+	 *     no:     show users all auth blocks.
+	 */
+	stats_k_oper_only=masked;
+
+	/* map oper only: make /map oper only */
+	map_oper_only = no;
+
+	/* operspy admin only: make operspy notices to +Z admin only */
+	operspy_admin_only = no;
+
+	/* operspy dont care user info: treat /who mask as if there was
+	 * an '!' always; do not log or server notice about operspy
+	 * /who mask, /masktrace and /scan. channel information is still
+	 * protected. */
+	operspy_dont_care_user_info = no;
+
+	/* caller id wait: time between notifying a +g user that somebody
+	 * is messaging them.
+	 */
+	caller_id_wait = 1 minute;
+
+	/* pace wait simple: time between use of less intensive commands
+	 * (HELP, remote WHOIS, WHOWAS)
+	 */
+	pace_wait_simple = 1 second;
+
+	/* pace wait: time between more intensive commands
+	 * (ADMIN, INFO, LIST, LUSERS, MOTD, STATS, VERSION)
+	 */
+	pace_wait = 10 seconds;
+
+	/* short motd: send clients a notice telling them to read the motd
+	 * instead of forcing a motd to clients who may simply ignore it.
+	 */
+	short_motd = no;
+
+	/* ping cookies: require clients to respond exactly to a ping command,
+	 * can help block certain types of drones and FTP PASV mode spoofing.
+	 */
+	ping_cookie = no;
+
+	/* connect timeout: sets how long we should wait for a connection
+	 * request to succeed
+	 */
+	connect_timeout = 30 seconds;
+
+	/* ident timeout: Amount of time (in seconds) that the IRCd will
+	 * wait for a user to respond to an ident request.
+	 */
+	default_ident_timeout = 5;
+
+	/* disable auth: disables identd checking */
+	disable_auth = no;
+
+	/* no oper flood: increase flood limits for opers. */
+	no_oper_flood = yes;
+
+	/* max targets: the maximum amount of targets in a single 
+	 * PRIVMSG/NOTICE.  set to 999 NOT 0 for unlimited.
+	 */
+	max_targets = 4;
+
+	/* use_whois_actually: send clients requesting a whois a numeric
+	 * giving the real IP of non-spoofed clients to prevent DNS abuse.
+	 */
+	use_whois_actually = yes;
+
+	/* usermodes configurable: a list of usermodes for the options below
+	 *
+	 * +g - callerid   - Server Side Ignore
+	 * +D - deaf       - Don't see channel messages
+	 * +i - invisible  - Not shown in NAMES or WHO unless you share a 
+	 *                   a channel
+	 * +l - locops     - See LOCOPS messages
+	 * +Q - noforward  - Unaffected by channel forwarding
+	 * +R - regonlymsg - No messages from unindentified
+	 * +s - servnotice - See server notices
+	 * +w - wallop     - See oper and server generated WALLOPS
+	 * +z - operwall   - See operwalls
+	 */
+	 
+	/* oper only umodes: usermodes only opers may set */
+	oper_only_umodes = operwall, locops, servnotice;
+
+	/* oper umodes: default usermodes opers get when they /oper */
+	oper_umodes = locops, servnotice, operwall, wallop;
+
+	/* oper snomask: default snomask opers get when they /oper,
+	 * provided they have umode +s set */
+	oper_snomask = "+s";
+
+	/* use egd: if your system does not have *random devices yet you
+	 * want to use OpenSSL and encrypted links, enable this.  Beware -
+	 * EGD is *very* CPU intensive when gathering data for its pool
+	 */
+	#use_egd = yes;
+
+	/* egdpool path: path to EGD pool. Not necessary for OpenSSL >= 0.9.7
+	 * which automatically finds the path.
+	 */
+	#egdpool_path = "/var/run/egd-pool";
+
+
+	/* compression level: level of compression for compressed links between
+	 * servers.  
+	 *
+	 * values are between: 1 (least compression, fastest)
+	 *                and: 9 (most compression, slowest).
+	 */
+	#compression_level = 6;
+
+	/* burst_away: This enables bursting away messages to servers.
+	 * With this disabled, we will only propogate AWAY messages
+	 * as users send them, but never burst them.  Be warned though
+	 * enabling this could increase the size of a burst significantly
+	 * for a large network, like EFnet.
+	 */
+	burst_away = yes;
+
+	/* nick delay: This locks nicks of split clients for the given time
+	 * or until a remote client uses the nick. This significantly
+	 * reduces nick collisions on short splits but it can be annoying.
+	 * To make things as fair as possible, this should be the same on
+	 * all servers. If you enable this, the suggested value is 15 minutes.
+	 */
+	nick_delay = 0 seconds;
+
+	/* reject time: the amount of rejections through klines/dlines etc
+	 * allowed in the given time before the rejection is cached and
+	 * a pseudo temp dline is placed
+	 */
+	reject_ban_time = 1 minute;
+	reject_after_count = 3;
+
+	/* reject duration: the amount of time to cache the rejection */
+	reject_duration = 5 minutes;
+
+	/* throttle_duration: Amount of time that throttling will be applied to an IP
+	 * address.
+	 */
+	throttle_duration = 60;
+
+	/* throttle_count: Number of connections within throttle_duration that it takes
+	 * for throttling to take effect */
+	throttle_count = 4;
+
+	/* client flood_max_lines: maximum number of lines in a clients queue before
+	 * they are dropped for flooding.
+	 */
+	client_flood_max_lines = 20;
+
+	/* Flood control settings. DO NOT CHANGE THESE without extensive discussion
+	 * and testing by someone who knows exactly what they do.
+	 *
+	 * These settings replicate charybdis-3.3 behaviour.
+	 */
+	client_flood_burst_rate = 40;
+	client_flood_burst_max = 5;
+	client_flood_message_time = 1;
+	client_flood_message_num = 2;
+
+	/* max_ratelimit_tokens: the maximum number of ratelimit tokens that one
+	 * user can accumulate. This attempts to limit the amount of outbound
+	 * bandwidth one user can consume.  Do not change unless you know what
+	 * you're doing.
+	 */
+	max_ratelimit_tokens = 30;
+
+	/* away_interval: the minimum interval between AWAY commands. One
+	 * additional AWAY command is allowed, and only marking as away
+	 * counts.
+	 */
+	away_interval = 30;
+};
+
+modules {
+	/* module path: paths to search for modules specified below and 
+	 * in /modload.
+	 */
+	path = "/usr/local/ircd/modules";
+	path = "/usr/local/ircd/modules/autoload";
+
+	/* module: the name of a module to load on startup/rehash */
+	#module = "some_module.so";
+};
