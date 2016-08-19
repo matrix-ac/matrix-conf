@@ -7,3 +7,13 @@
 
 - name: Install admin scripts.
   template: src=adm-adduser.j2 dest=/usr/sbin/adm-adduser owner=root group=sudo mode="u=rx,g=rx,o="
+
+# - name: SSH Public Key access only.
+#   lineinfile: dest=/etc/ssh/sshd_config regexp="PasswordAuthentication" line="PasswordAuthentication no"
+#   # lineinfile: dest=/etc/ssh/sshd_config regexp="^AuthenticationMethods" line="AuthenticationMethods publickey,keyboard-interactive"
+
+# - name: SSH 2 Factor
+#   apt: name=libpam-google-authenticator state=present
+# - lineinfile: dest=/etc/pam.d/sshd line="auth required pam_google_authenticator.so nullok"
+
+# - service: name=sshd state=restarted
