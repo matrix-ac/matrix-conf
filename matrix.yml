@@ -2,7 +2,4 @@
 - hosts: all
   become_method: sudo 
 - include: common.yml
-# - include: webserver.yml
-# - include: cgit.yml
-# - include: xmpp.yml
-# - include: irc.yml
+- include: services.yml

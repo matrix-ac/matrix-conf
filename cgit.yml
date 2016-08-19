@@ -1,7 +1,0 @@
----
-- name: Configure and deploy cgit
-  hosts: all
-  become: yes
-
-  roles:
-    - cgit

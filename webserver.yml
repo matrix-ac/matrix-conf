@@ -1,7 +1,0 @@
----
-- name: Configure and deploy the webservers and application code
-  hosts: all
-  become: yes
-
-  roles:
-    - web
