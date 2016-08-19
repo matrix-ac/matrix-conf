@@ -7,8 +7,13 @@
    - git
    - jekyll
 
+- file: path=/etc/nginx/sites-available/default state=absent
+- file: path=/etc/nginx/sites-enabled/default state=absent
+
 - name: Configure nginx
-  template: src=matrix.ac.j2 dest=/etc/nginx/sites-enabled/matrix.ac
+  template: src=matrix.ac.j2 dest=/etc/nginx/sites-available/matrix.ac
+
+- file: src=/etc/nginx/sites-available/matrix.ac dest=/etc/nginx/sites-enabled/matrix.ac owner=root group=root state=link
   notify: restart nginx
 
 - name: http service state

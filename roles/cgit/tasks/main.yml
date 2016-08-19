@@ -13,7 +13,9 @@
   template: src=cgitrc.j2 dest=/etc/cgitrc
 
 - name: Add nginx config
-  template: src=cgit.conf.j2 dest=/etc/nginx/sites-enabled/cgit.conf
+  template: src=cgit.conf.j2 dest=/etc/nginx/sites-available/cgit.conf
+
+- file: src=/etc/nginx/sites-available/cgit.conf dest=/etc/nginx/sites-enabled/cgit.conf owner=root group=root state=link
   notify: restart nginx
 
 - name: http service state
