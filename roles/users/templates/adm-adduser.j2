@@ -5,14 +5,26 @@
 USERNAME=$1
 SSH_PUB=$2
 
-if [ ! -L /home/$USERNAME ]; then
+if [[ -z $USERNAME || -z $SSH_PUB ]]; then
+	echo "Error - Not enough parameters."
+	echo "Make sure you have provided a username and file location of public key.\n"
+	echo "adm-adduser username username.pub"
+	exit
+fi
+
+
+if [ ! -d /home/$USERNAME ]; then
 	adduser --disabled-login --disabled-password --gecos "" $USERNAME
 	cp $SSH_PUB /home/$USERNAME/.ssh/authorized_keys
 	chown $USERNAME /home/$USERNAME/.ssh/authorized_keys
+else
+	echo "[!] Home directory already exists: /home/$USERNAME"
 fi
 
 if [ ! -L {{ cgit_repo_locations }}/$USERNAME ]; then
    ln -fs /home/$USERNAME/public_repos {{ cgit_repo_locations }}/$USERNAME
-   echo "Created - /home/$USERNAME/public_repos {{ cgit_repo_locations }}/$USERNAME"
+   echo "[*] Created - /home/$USERNAME/public_repos {{ cgit_repo_locations }}/$USERNAME"
+else
+	echo "[!] cgit link already exists: {{ cgit_repo_locations }}/$USERNAME"
 fi
 
