@@ -4,6 +4,6 @@
   become: yes
 
   roles:
-    # - web
-    # - cgit
-    - ircd
+    - web
+    - cgit
+    # - ircd

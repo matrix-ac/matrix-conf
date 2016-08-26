@@ -1,20 +1,18 @@
 ---
 # file: roles/users/tasks
 
+# Skel folder 
 - file: path=/etc/skel/public_html owner=root group=root state=directory mode=0755
+- template: src=index.html dest=/etc/skel/public_html/index.html owner=root group=root mode=0644
 - file: path=/etc/skel/public_repos owner=root group=root state=directory mode=0755
 - file: path=/etc/skel/.ssh owner=root group=root state=directory mode=0744
 
-- name: Install admin scripts.
-  template: src=adm-adduser.j2 dest=/usr/sbin/adm-adduser owner=root group=sudo mode="u=rx,g=rx,o="
-  template: src=fixwebperms.pl dest=/usr/local/bin/fixwebperms owner=root group=root mode="u=rxw,g=rx,o=rx"
+# Admin Scripts
+- template: src=adm-adduser.j2 dest=/usr/sbin/adm-adduser owner=root group=sudo mode="u=rx,g=rx,o="
+- template: src=fixwebperms.pl dest=/usr/local/bin/fixwebperms owner=root group=root mode="u=rxw,g=rx,o=rx"
 
-# - name: SSH Public Key access only.
-#   lineinfile: dest=/etc/ssh/sshd_config regexp="PasswordAuthentication" line="PasswordAuthentication no"
-#   # lineinfile: dest=/etc/ssh/sshd_config regexp="^AuthenticationMethods" line="AuthenticationMethods publickey,keyboard-interactive"
-
-# - name: SSH 2 Factor
-#   apt: name=libpam-google-authenticator state=present
-# - lineinfile: dest=/etc/pam.d/sshd line="auth required pam_google_authenticator.so nullok"
+# SSHD
+- lineinfile: dest=/etc/ssh/sshd_config regexp="PasswordAuthentication" line="PasswordAuthentication no"
+- lineinfile: dest=/etc/ssh/sshd_config regexp="^AuthenticationMethods" line="AuthenticationMethods publickey"
 
 # - service: name=sshd state=restarted

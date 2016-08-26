@@ -13,6 +13,7 @@
    - ntp 
    - ufw 
    - htop
+   - letsencrypt
    # Editors
    - vim
    - emacs
@@ -37,3 +38,20 @@
    - zsh
    # Misc
    - pandoc
+   - tree
+
+
+  
+- ufw: state=enabled policy=deny
+- ufw: rule=allow port=22
+- ufw: rule=limit port=ssh proto=tcp
+- ufw: rule=allow port=80
+- ufw: rule=allow port=443
+
+
+- service: name=nginx state=stopped
+- command: letsencrypt certonly --register-unsafely-without-email --non-interactive --standalone --agree-tos --keep-until-expiring -d git.matrix.ac 
+- command: letsencrypt certonly --register-unsafely-without-email --non-interactive --standalone --agree-tos --keep-until-expiring -d www.matrix.ac -d matrix.ac 
+- command: letsencrypt certonly --register-unsafely-without-email --non-interactive --standalone --agree-tos --keep-until-expiring -d irc.matrix.ac
+- command: letsencrypt certonly --register-unsafely-without-email --non-interactive --standalone --agree-tos --keep-until-expiring -d xmpp.matrix.ac
+- service: name=nginx state=started
