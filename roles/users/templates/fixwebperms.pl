@@ -7,6 +7,9 @@
 # PHP is given 0600;
 # everything else gets 0644.
 
+# This was kindly taken from Aberystwyth CS servers. 
+# Hope you guys don't mind :) 
+
 use File::Find;
 
 my @u = getpwuid($<);
