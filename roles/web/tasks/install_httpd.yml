@@ -13,6 +13,8 @@
 - name: Configure nginx
   template: src=matrix.ac.j2 dest=/etc/nginx/sites-available/matrix.ac
 
+- template: src=headers.conf dest=/etc/nginx/conf.d/headers.conf
+
 - file: src=/etc/nginx/sites-available/matrix.ac dest=/etc/nginx/sites-enabled/matrix.ac owner=root group=root state=link
   notify: restart nginx
 
