@@ -14,5 +14,5 @@
 # SSHD
 - lineinfile: dest=/etc/ssh/sshd_config regexp="PasswordAuthentication" line="PasswordAuthentication no"
 - lineinfile: dest=/etc/ssh/sshd_config regexp="^AuthenticationMethods" line="AuthenticationMethods publickey"
-
-# - service: name=sshd state=restarted
+- lineinfile: dest=/etc/ssh/sshd_config regexp="^PermitRootLogin" line="PermitRootLogin prohibit-password"
+- service: name=nginx state=restarted
