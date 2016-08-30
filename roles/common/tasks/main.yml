@@ -39,9 +39,11 @@
    # Misc
    - pandoc
    - tree
+   - figlet
 
 
   
+# Set firewall.
 - ufw: state=enabled policy=deny
 - ufw: rule=allow port=22
 - ufw: rule=limit port=ssh proto=tcp
@@ -49,9 +51,21 @@
 - ufw: rule=allow port=443
 
 
+# Generate some certs
 - service: name=nginx state=stopped
 - command: letsencrypt certonly --register-unsafely-without-email --non-interactive --standalone --agree-tos --keep-until-expiring -d git.matrix.ac 
 - command: letsencrypt certonly --register-unsafely-without-email --non-interactive --standalone --agree-tos --keep-until-expiring -d www.matrix.ac -d matrix.ac 
 - command: letsencrypt certonly --register-unsafely-without-email --non-interactive --standalone --agree-tos --keep-until-expiring -d irc.matrix.ac
 - command: letsencrypt certonly --register-unsafely-without-email --non-interactive --standalone --agree-tos --keep-until-expiring -d xmpp.matrix.ac
 - service: name=nginx state=started
+
+# Setup the MOTD
+- file: path=/etc/update-motd.d/00-header state=absent
+- file: path=/etc/update-motd.d/10-help-text state=absent
+- file: path=/etc/update-motd.d/90-updates-available state=absent
+- file: path=/etc/update-motd.d/91-release-upgrade state=absent
+- file: path=/etc/update-motd.d/97-overlayroot state=absent
+- file: path=/etc/update-motd.d/98-fsck-at-reboot state=absent
+- file: path=/etc/update-motd.d/98-reboot-required state=absent
+
+- template: src=00-motd dest=/etc/update-motd.d/ owner=root group=root mode=0755

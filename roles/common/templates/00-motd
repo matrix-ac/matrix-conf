@@ -1,0 +1,10 @@
+#!/bin/sh
+
+figlet -ck $(hostname)
+printf "\n"
+printf "\033[32;3m I'm going to show them a world without you, a world without rules and controls,\033[0m\n"
+printf "\033[32;3m without borders or boundaries, a world where anything is possible. Where we go\033[0m\n"
+printf "\033[32;3m from there, is a choice I leave to you.\033[0m\n"
+printf "\n"
+
+
