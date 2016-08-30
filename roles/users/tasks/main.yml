@@ -15,4 +15,6 @@
 - lineinfile: dest=/etc/ssh/sshd_config regexp="PasswordAuthentication" line="PasswordAuthentication no"
 - lineinfile: dest=/etc/ssh/sshd_config regexp="^AuthenticationMethods" line="AuthenticationMethods publickey"
 - lineinfile: dest=/etc/ssh/sshd_config regexp="^PermitRootLogin" line="PermitRootLogin prohibit-password"
+- lineinfile: dest=/etc/ssh/sshd_config regexp="^X11Forwarding" line="X11Forwarding no"
+- lineinfile: dest=/etc/ssh/sshd_config regexp="^X11Forwarding" line="X11Forwarding no"
 - service: name=nginx state=restarted
