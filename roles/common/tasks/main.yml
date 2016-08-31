@@ -22,6 +22,7 @@
    - tmux 
    # Chat
    - weechat 
+   - python-potr
    - irssi
    - mcabber
    - profanity
