@@ -52,7 +52,7 @@
 - ufw: rule=limit port=ssh proto=tcp
 - ufw: rule=allow port=80
 - ufw: rule=allow port=443
-- ufw: rule=allow port=6000:60001 proto=udp
+- ufw: rule=allow port=60000:60999 proto=udp
 
 # Generate some certs
 - service: name=nginx state=stopped
