@@ -1,0 +1,64 @@
+---
+# file: roles/synapse/tasks
+
+# TODO: Create user more like a packaged daemon. 
+- name: Create a new user
+  user:
+    name: synapse
+    comment: "synapse user"
+    system: yes 
+
+- block:
+  - name: Install deps.
+    apt: name={{ item }} state=present
+    with_items: 
+      - build-essential
+      - python2.7-dev
+      - libffi-dev
+      - python-pip
+      - python-setuptools
+      - sqlite3
+      - libssl-dev
+      - python-virtualenv
+      - libjpeg-dev
+      - libxslt1-dev
+
+  - name: Install synapse
+    pip:
+      name: 'https://github.com/matrix-org/synapse/tarball/master'
+      extra_args: '--no-cache-dir'
+      virtualenv: ~/.synapse
+      virtualenv_site_packages: yes
+      virtualenv_python: python2.7
+
+  - name: Generate synapse config
+    command: bin/python -m synapse.app.homeserver --server-name {{ matrix_hostname }} --config-path homeserver.yaml --generate-config --report-stats=no --enable-registration
+    args:
+      chdir: ~/.synapse
+      creates: homeserver.yaml
+
+  # TODO: Deploy the config template using vault to store the secrets.
+  #         - Port 8448 listen should be bound to localhost
+  #         - x_forwarded: true 
+  # TODO: Systemd service for synapse
+
+  - name: Start synapse
+    command: bin/synctl start
+    args:
+      chdir: ~/.synapse
+
+  become: yes
+  become_user: synapse
+
+- name: Enable nginx reverse proxy 
+  blockinfile:
+    dest: /etc/nginx/sites-available/matrix.ac
+    insertafter: "# KEEP HERE USED FOR ANSIBLE TO FIND THIS LOCATION"
+    block: |
+      location /_matrix {
+              proxy_pass http://localhost:8008;
+              proxy_set_header X-Forwarded-For $remote_addr;
+      }
+
+- name: Allow Federated connections
+  ufw: rule=limit port=8448 proto=tcp
