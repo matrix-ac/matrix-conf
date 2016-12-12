@@ -58,7 +58,11 @@
       location /_matrix {
               proxy_pass http://localhost:8008;
               proxy_set_header X-Forwarded-For $remote_addr;
+              error_log logs/synapse-error.log crit;
+              access_log  logs/synapse-access.log crit;
       }
 
 - name: Allow Federated connections
   ufw: rule=limit port=8448 proto=tcp
+
+
