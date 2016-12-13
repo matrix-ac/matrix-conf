@@ -1,0 +1,6 @@
+---
+- name: Install deps.
+  apt: name=libopenscap8 state=present
+
+- name: Test
+  command: oscap -V
