@@ -40,15 +40,23 @@
   # TODO: Deploy the config template using vault to store the secrets.
   #         - Port 8448 listen should be bound to localhost
   #         - x_forwarded: true 
-  # TODO: Systemd service for synapse
-
-  - name: Start synapse
-    command: bin/synctl start
-    args:
-      chdir: ~/.synapse
-
+  
+  # - name: Create directories needed
+  #   file:
+  #     path: ~/.config/systemd/user/
+  #     state: directory
+  #     mode: 0755
   become: yes
   become_user: synapse
+
+- name: SystemD Service
+  template: src=synapse.service dest=/etc/systemd/system/synapse.service
+
+- name: Enabling Service
+  command: systemctl enable synapse.service
+
+- name: Start synapse
+  command: service synapse start
 
 - name: Enable nginx reverse proxy 
   blockinfile:

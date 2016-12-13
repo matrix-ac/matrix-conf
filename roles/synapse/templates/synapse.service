@@ -1,0 +1,14 @@
+[Unit]
+Description=Synapse Matrix Homeserver
+
+[Service]
+Type=forking
+PIDFile=/home/synapse/.synapse/homeserver.pid
+User=synapse
+Group=synapse
+Restart=on-failure
+WorkingDirectory=/home/synapse/.synapse/
+ExecStart=/home/synapse/.synapse/bin/synctl start
+
+[Install]
+WantedBy=multi-user.target
