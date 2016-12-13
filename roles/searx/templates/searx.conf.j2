@@ -1,0 +1,23 @@
+server {
+        listen      80;
+        server_name {{ searx_hostname }};
+        rewrite     ^ https://{{ searx_hostname }}$request_uri? permanent;
+}
+
+
+server {
+        listen 443 ssl;
+        server_name {{ searx_hostname }};
+
+        ssl_certificate     /etc/letsencrypt/live/{{ searx_hostname }}/fullchain.pem;
+        ssl_certificate_key /etc/letsencrypt/live/{{ searx_hostname }}/privkey.pem;
+
+        root /usr/local/searx; 
+
+		location / {
+			include uwsgi_params;
+			uwsgi_pass unix:/run/uwsgi/app/searx/socket;
+		}
+}
+
+

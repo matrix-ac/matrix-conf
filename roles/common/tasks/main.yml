@@ -43,7 +43,7 @@
    - tree
    - figlet
    - mosh
-
+   - lnav
 
   
 # Set firewall.
@@ -60,6 +60,7 @@
 - command: letsencrypt certonly --register-unsafely-without-email --non-interactive --standalone --agree-tos --keep-until-expiring -d www.matrix.ac -d matrix.ac 
 - command: letsencrypt certonly --register-unsafely-without-email --non-interactive --standalone --agree-tos --keep-until-expiring -d irc.matrix.ac
 - command: letsencrypt certonly --register-unsafely-without-email --non-interactive --standalone --agree-tos --keep-until-expiring -d xmpp.matrix.ac
+- command: letsencrypt certonly --register-unsafely-without-email --non-interactive --standalone --agree-tos --keep-until-expiring -d search.matrix.ac
 - service: name=nginx state=started
 
 # Setup the MOTD
